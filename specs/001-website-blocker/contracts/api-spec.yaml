@@ -1,0 +1,967 @@
+openapi: 3.0.0
+info:
+  title: Website Blocker API
+  description: API for managing website blocking rules and user sessions
+  version: 1.0.0
+  contact:
+    name: Website Blocker Team
+    
+servers:
+  - url: http://localhost:3000
+    description: Development server
+  - url: https://api.websiteblocker.com
+    description: Production server
+
+paths:
+  # Authentication
+  /auth/login:
+    post:
+      tags:
+        - Authentication
+      summary: User login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /auth/register:
+    post:
+      tags:
+        - Authentication
+      summary: User registration
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterRequest'
+      responses:
+        '201':
+          description: Registration successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+  /auth/refresh:
+    post:
+      tags:
+        - Authentication
+      summary: Refresh access token
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Token refreshed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  # User Management
+  /users/profile:
+    get:
+      tags:
+        - Users
+      summary: Get user profile
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: User profile
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+    patch:
+      tags:
+        - Users
+      summary: Update user profile
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateUserRequest'
+      responses:
+        '200':
+          description: Profile updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  # Blocklists
+  /blocklists:
+    get:
+      tags:
+        - Blocklists
+      summary: List user's personal blocklists
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: query
+          name: includeInactive
+          schema:
+            type: boolean
+            default: false
+          description: Include inactive blocklists
+      responses:
+        '200':
+          description: List of blocklists
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Blocklist'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+    post:
+      tags:
+        - Blocklists
+      summary: Create new blocklist
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateBlocklistRequest'
+      responses:
+        '201':
+          description: Blocklist created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Blocklist'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /blocklists/{blocklistId}:
+    get:
+      tags:
+        - Blocklists
+      summary: Get blocklist details
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: blocklistId
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Blocklist details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BlocklistWithWebsites'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    patch:
+      tags:
+        - Blocklists
+      summary: Update blocklist
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: blocklistId
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateBlocklistRequest'
+      responses:
+        '200':
+          description: Blocklist updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Blocklist'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    delete:
+      tags:
+        - Blocklists
+      summary: Delete blocklist
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: blocklistId
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Blocklist deleted
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  # Websites in Blocklists
+  /blocklists/{blocklistId}/websites:
+    post:
+      tags:
+        - Websites
+      summary: Add website to blocklist
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: blocklistId
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AddWebsiteRequest'
+      responses:
+        '201':
+          description: Website added
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Website'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /blocklists/{blocklistId}/websites/{websiteId}:
+    delete:
+      tags:
+        - Websites
+      summary: Remove website from blocklist
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: blocklistId
+          required: true
+          schema:
+            type: string
+        - in: path
+          name: websiteId
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Website removed
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  # Schedules
+  /schedules:
+    get:
+      tags:
+        - Schedules
+      summary: List user's schedules
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: List of schedules
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Schedule'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+    post:
+      tags:
+        - Schedules
+      summary: Create new schedule
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateScheduleRequest'
+      responses:
+        '201':
+          description: Schedule created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Schedule'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /schedules/{scheduleId}:
+    get:
+      tags:
+        - Schedules
+      summary: Get schedule details
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: scheduleId
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Schedule details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ScheduleWithSessions'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    patch:
+      tags:
+        - Schedules
+      summary: Update schedule
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: scheduleId
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateScheduleRequest'
+      responses:
+        '200':
+          description: Schedule updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Schedule'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    delete:
+      tags:
+        - Schedules
+      summary: Delete schedule
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: scheduleId
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Schedule deleted
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  # Extension Sync
+  /extension/sync:
+    get:
+      tags:
+        - Extension
+      summary: Get extension data for sync
+      description: Returns user's active blocklists and schedules for extension
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: query
+          name: lastSync
+          schema:
+            type: string
+            format: date-time
+          description: ISO timestamp of last sync for incremental updates
+      responses:
+        '200':
+          description: Extension sync data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExtensionSyncData'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /extension/analytics:
+    post:
+      tags:
+        - Extension
+      summary: Submit analytics events
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AnalyticsSubmission'
+      responses:
+        '202':
+          description: Analytics events accepted
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  # Analytics & Insights
+  /analytics/dashboard:
+    get:
+      tags:
+        - Analytics
+      summary: Get dashboard analytics
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: query
+          name: period
+          schema:
+            type: string
+            enum: [week, month, quarter, year]
+            default: week
+        - in: query
+          name: timezone
+          schema:
+            type: string
+            default: UTC
+      responses:
+        '200':
+          description: Dashboard analytics data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DashboardAnalytics'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    # Authentication Schemas
+    LoginRequest:
+      type: object
+      required:
+        - email
+        - password
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          minLength: 6
+
+    RegisterRequest:
+      type: object
+      required:
+        - email
+        - password
+        - name
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          minLength: 6
+        name:
+          type: string
+          maxLength: 255
+
+    AuthResponse:
+      type: object
+      required:
+        - accessToken
+        - refreshToken
+        - user
+        - expiresIn
+      properties:
+        accessToken:
+          type: string
+        refreshToken:
+          type: string
+        user:
+          $ref: '#/components/schemas/User'
+        expiresIn:
+          type: integer
+          description: Token expiration in seconds
+
+    # User Schemas
+    User:
+      type: object
+      required:
+        - id
+        - email
+        - createdAt
+        - updatedAt
+      properties:
+        id:
+          type: string
+        email:
+          type: string
+          format: email
+        name:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    UpdateUserRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          maxLength: 255
+
+    # Blocklist Schemas
+    Blocklist:
+      type: object
+      required:
+        - id
+        - name
+        - userId
+        - isActive
+        - createdAt
+        - updatedAt
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+          maxLength: 255
+        description:
+          type: string
+          nullable: true
+          maxLength: 1000
+        userId:
+          type: string
+        organizationId:
+          type: string
+          nullable: true
+        isActive:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    BlocklistWithWebsites:
+      allOf:
+        - $ref: '#/components/schemas/Blocklist'
+        - type: object
+          properties:
+            websites:
+              type: array
+              items:
+                $ref: '#/components/schemas/Website'
+
+    CreateBlocklistRequest:
+      type: object
+      required:
+        - name
+      properties:
+        name:
+          type: string
+          maxLength: 255
+        description:
+          type: string
+          maxLength: 1000
+
+    UpdateBlocklistRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          maxLength: 255
+        description:
+          type: string
+          maxLength: 1000
+        isActive:
+          type: boolean
+
+    # Website Schemas
+    Website:
+      type: object
+      required:
+        - id
+        - domain
+        - blocklistId
+        - addedAt
+      properties:
+        id:
+          type: string
+        domain:
+          type: string
+          pattern: '^(\*\.)?[a-zA-Z0-9][a-zA-Z0-9-]*[a-zA-Z0-9]*\.([a-zA-Z]{2,}|[a-zA-Z]{2,}\.[a-zA-Z]{2,})$'
+        blocklistId:
+          type: string
+        addedAt:
+          type: string
+          format: date-time
+
+    AddWebsiteRequest:
+      type: object
+      required:
+        - domain
+      properties:
+        domain:
+          type: string
+          pattern: '^(\*\.)?[a-zA-Z0-9][a-zA-Z0-9-]*[a-zA-Z0-9]*\.([a-zA-Z]{2,}|[a-zA-Z]{2,}\.[a-zA-Z]{2,})$'
+
+    # Schedule Schemas
+    Schedule:
+      type: object
+      required:
+        - id
+        - name
+        - userId
+        - isActive
+        - createdAt
+        - updatedAt
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+          maxLength: 255
+        userId:
+          type: string
+        isActive:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    ScheduleWithSessions:
+      allOf:
+        - $ref: '#/components/schemas/Schedule'
+        - type: object
+          properties:
+            sessions:
+              type: array
+              items:
+                $ref: '#/components/schemas/ScheduleSession'
+
+    ScheduleSession:
+      type: object
+      required:
+        - id
+        - scheduleId
+        - dayOfWeek
+        - startTime
+        - endTime
+      properties:
+        id:
+          type: string
+        scheduleId:
+          type: string
+        dayOfWeek:
+          type: string
+          enum: [MONDAY, TUESDAY, WEDNESDAY, THURSDAY, FRIDAY, SATURDAY, SUNDAY]
+        startTime:
+          type: string
+          pattern: '^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$'
+          example: "09:00"
+        endTime:
+          type: string
+          pattern: '^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$'
+          example: "17:00"
+
+    CreateScheduleRequest:
+      type: object
+      required:
+        - name
+        - sessions
+      properties:
+        name:
+          type: string
+          maxLength: 255
+        sessions:
+          type: array
+          items:
+            $ref: '#/components/schemas/CreateScheduleSessionRequest'
+
+    CreateScheduleSessionRequest:
+      type: object
+      required:
+        - dayOfWeek
+        - startTime
+        - endTime
+      properties:
+        dayOfWeek:
+          type: string
+          enum: [MONDAY, TUESDAY, WEDNESDAY, THURSDAY, FRIDAY, SATURDAY, SUNDAY]
+        startTime:
+          type: string
+          pattern: '^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$'
+        endTime:
+          type: string
+          pattern: '^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$'
+
+    UpdateScheduleRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          maxLength: 255
+        isActive:
+          type: boolean
+        sessions:
+          type: array
+          items:
+            $ref: '#/components/schemas/CreateScheduleSessionRequest'
+
+    # Extension Schemas
+    ExtensionSyncData:
+      type: object
+      required:
+        - user
+        - blocklists
+        - schedules
+        - lastSync
+      properties:
+        user:
+          $ref: '#/components/schemas/User'
+        blocklists:
+          type: array
+          items:
+            $ref: '#/components/schemas/BlocklistWithWebsites'
+        schedules:
+          type: array
+          items:
+            $ref: '#/components/schemas/ScheduleWithSessions'
+        lastSync:
+          type: string
+          format: date-time
+
+    AnalyticsEvent:
+      type: object
+      required:
+        - domain
+        - action
+        - timestamp
+      properties:
+        domain:
+          type: string
+        action:
+          type: string
+          enum: [BLOCKED, ALLOWED, SCHEDULE_START, SCHEDULE_END, MANUAL_BYPASS]
+        timestamp:
+          type: string
+          format: date-time
+        metadata:
+          type: object
+          additionalProperties: true
+
+    AnalyticsSubmission:
+      type: object
+      required:
+        - events
+      properties:
+        events:
+          type: array
+          items:
+            $ref: '#/components/schemas/AnalyticsEvent'
+          maxItems: 100
+
+    # Analytics Schemas
+    DashboardAnalytics:
+      type: object
+      required:
+        - period
+        - summary
+        - timeline
+        - topBlocked
+      properties:
+        period:
+          type: object
+          required:
+            - start
+            - end
+          properties:
+            start:
+              type: string
+              format: date-time
+            end:
+              type: string
+              format: date-time
+        summary:
+          type: object
+          required:
+            - totalBlocked
+            - totalAttempts
+            - focusTime
+            - averageDaily
+          properties:
+            totalBlocked:
+              type: integer
+            totalAttempts:
+              type: integer
+            focusTime:
+              type: integer
+              description: Total focus time in minutes
+            averageDaily:
+              type: number
+              description: Average blocks per day
+        timeline:
+          type: array
+          items:
+            type: object
+            required:
+              - date
+              - blocked
+              - attempts
+            properties:
+              date:
+                type: string
+                format: date
+              blocked:
+                type: integer
+              attempts:
+                type: integer
+        topBlocked:
+          type: array
+          items:
+            type: object
+            required:
+              - domain
+              - count
+              - percentage
+            properties:
+              domain:
+                type: string
+              count:
+                type: integer
+              percentage:
+                type: number
+
+    # Error Schemas
+    ErrorResponse:
+      type: object
+      required:
+        - message
+        - statusCode
+        - timestamp
+      properties:
+        message:
+          type: string
+        statusCode:
+          type: integer
+        timestamp:
+          type: string
+          format: date-time
+        path:
+          type: string
+        details:
+          type: object
+          additionalProperties: true
+
+  responses:
+    BadRequest:
+      description: Bad request
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+
+    Unauthorized:
+      description: Unauthorized
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+
+    InternalServerError:
+      description: Internal server error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
