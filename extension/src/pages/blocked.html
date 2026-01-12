@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Site Blocked - Personal Website Blocker</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    
+    .container {
+      text-align: center;
+      max-width: 600px;
+      background: white;
+      border-radius: 16px;
+      padding: 48px 32px;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+    }
+    
+    .icon {
+      font-size: 72px;
+      margin-bottom: 24px;
+    }
+    
+    h1 {
+      font-size: 32px;
+      color: #1f2937;
+      margin-bottom: 16px;
+      font-weight: 700;
+    }
+    
+    p {
+      font-size: 18px;
+      color: #6b7280;
+      margin-bottom: 32px;
+      line-height: 1.6;
+    }
+    
+    .stats {
+      background: #f8fafc;
+      border-radius: 12px;
+      padding: 24px;
+      margin: 32px 0;
+      border: 1px solid #e2e8f0;
+    }
+    
+    .stat-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 0;
+      border-bottom: 1px solid #e2e8f0;
+    }
+    
+    .stat-item:last-child {
+      border-bottom: none;
+    }
+    
+    .stat-label {
+      color: #64748b;
+      font-weight: 500;
+    }
+    
+    .stat-value {
+      color: #1e293b;
+      font-weight: 600;
+    }
+    
+    .actions {
+      display: flex;
+      gap: 16px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+    
+    button {
+      padding: 12px 24px;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 16px;
+      border: none;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    
+    .btn-primary {
+      background: #3b82f6;
+      color: white;
+    }
+    
+    .btn-primary:hover {
+      background: #2563eb;
+      transform: translateY(-1px);
+    }
+    
+    .btn-secondary {
+      background: #f1f5f9;
+      color: #475569;
+      border: 1px solid #cbd5e1;
+    }
+    
+    .btn-secondary:hover {
+      background: #e2e8f0;
+      transform: translateY(-1px);
+    }
+    
+    @media (max-width: 480px) {
+      .container {
+        padding: 32px 20px;
+      }
+      
+      h1 {
+        font-size: 24px;
+      }
+      
+      p {
+        font-size: 16px;
+      }
+      
+      .actions {
+        flex-direction: column;
+        align-items: center;
+      }
+      
+      button {
+        width: 100%;
+        max-width: 200px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="icon">🛡️</div>
+    <h1>Website Blocked</h1>
+    <p>This site is in your personal blocklist. Take a moment to focus on what matters most to you.</p>
+    
+    <div class="stats">
+      <div class="stat-item">
+        <span class="stat-label">Sites blocked today</span>
+        <span class="stat-value" id="blocked-count">0</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-label">Time saved</span>
+        <span class="stat-value" id="time-saved">0 min</span>
+      </div>
+    </div>
+    
+    <div class="actions">
+      <button class="btn-primary" onclick="openDashboard()">Open Dashboard</button>
+      <button class="btn-secondary" onclick="goBack()">Go Back</button>
+    </div>
+  </div>
+
+  <script>
+    // Load blocked count from storage
+    chrome.storage.sync.get(['totalBlockedToday'], (result) => {
+      const count = result.totalBlockedToday || 0
+      document.getElementById('blocked-count').textContent = count
+      
+      // Estimate 5 minutes saved per blocked site
+      const timeSaved = count * 5
+      document.getElementById('time-saved').textContent = timeSaved + ' min'
+    })
+    
+    function openDashboard() {
+      // TODO: Open the Next.js dashboard URL
+      chrome.tabs.create({ url: 'http://localhost:3000' })
+    }
+    
+    function goBack() {
+      history.back()
+    }
+    
+    // Add some motivational quotes
+    const quotes = [
+      "Focus is a matter of deciding what things you're not going to do.",
+      "The successful person has the habit of doing the things failures don't like to do.",
+      "You are in control of your attention. Choose wisely.",
+      "Discipline is the bridge between goals and accomplishment.",
+      "Every moment you spend distracted is a moment stolen from your dreams."
+    ]
+    
+    // Show a random quote
+    setTimeout(() => {
+      const quote = quotes[Math.floor(Math.random() * quotes.length)]
+      const quoteElement = document.createElement('div')
+      quoteElement.style.cssText = `
+        margin-top: 24px;
+        font-style: italic;
+        color: #64748b;
+        font-size: 16px;
+        line-height: 1.5;
+      `
+      quoteElement.textContent = `"${quote}"`
+      document.querySelector('.container').appendChild(quoteElement)
+    }, 1000)
+  </script>
+</body>
+</html>
