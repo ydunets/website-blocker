@@ -1,0 +1,14 @@
+services:
+  db:
+    image: postgres:14.1-alpine
+    restart: always
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: website_blocker_db
+    ports:
+      - "7799:5432"
+    volumes:
+      - db:/var/lib/postgresql/data
+volumes:
+  db:
