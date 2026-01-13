@@ -1,0 +1,292 @@
+openapi: 3.0.0
+paths:
+  /:
+    get:
+      operationId: AppController_getHello
+      parameters: []
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HelloWorldDto'
+      tags:
+        - App
+  /account:
+    get:
+      operationId: AccountController_getAccountInfo
+      parameters: []
+      responses:
+        '200':
+          description: Account information retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AccountDto'
+      tags:
+        - Account
+    patch:
+      operationId: AccountController_patchAccount
+      parameters: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchAccountDto'
+      responses:
+        '200':
+          description: Account information updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AccountDto'
+      tags:
+        - Account
+  /block-list:
+    get:
+      operationId: BlockListController_getBlockList
+      parameters:
+        - name: q
+          required: false
+          in: query
+          schema:
+            nullable: true
+            type: string
+      responses:
+        '200':
+          description: Block list retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BlockListDto'
+      tags:
+        - BlockList
+  /block-list/item/{id}:
+    get:
+      operationId: BlockListController_getBlockItem
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: number
+      responses:
+        '200':
+          description: Block item retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BlockItemDto'
+      tags:
+        - BlockList
+    delete:
+      operationId: BlockListController_removeBlockItem
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: number
+      responses:
+        '200':
+          description: Block item removed successfully
+      tags:
+        - BlockList
+  /block-list/item:
+    post:
+      operationId: BlockListController_addBlockItem
+      parameters: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AddBlockItemDto'
+      responses:
+        '201':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BlockItemDto'
+      tags:
+        - BlockList
+  /auth/signin:
+    post:
+      operationId: AuthController_signIn
+      parameters: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SignInBodyDto'
+      responses:
+        '200':
+          description: User successfully signed in
+      tags:
+        - Auth
+  /auth/signup:
+    post:
+      operationId: AuthController_signUp
+      parameters: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SignUpBodyDto'
+      responses:
+        '200':
+          description: User successfully registered
+      tags:
+        - Auth
+  /auth/signout:
+    post:
+      operationId: AuthController_signOut
+      parameters: []
+      responses:
+        '204':
+          description: ''
+      tags:
+        - Auth
+  /auth/session-info:
+    post:
+      operationId: AuthController_getSessionInfo
+      parameters: []
+      responses:
+        '200':
+          description: Session information retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetSessionInfoDto'
+      tags:
+        - Auth
+info:
+  title: Website blocker API Documentation
+  description: ''
+  version: 1.0.0
+  contact: {}
+tags: []
+servers: []
+components:
+  schemas:
+    HelloWorldDto:
+      type: object
+      properties:
+        message:
+          type: string
+      required:
+        - message
+    AccountDto:
+      type: object
+      properties:
+        id:
+          type: number
+        isBlockingEnabled:
+          type: boolean
+        ownerId:
+          type: number
+      required:
+        - id
+        - isBlockingEnabled
+        - ownerId
+    PatchAccountDto:
+      type: object
+      properties:
+        isBlockingEnabled:
+          type: boolean
+    BlockItemDto:
+      type: object
+      properties:
+        id:
+          type: number
+        blockListId:
+          type: number
+        type:
+          type: string
+          enum:
+            - WEBSITE
+            - KEYWORD
+        data:
+          type: string
+        createdAt:
+          format: date-time
+          type: string
+      required:
+        - id
+        - blockListId
+        - type
+        - data
+        - createdAt
+    BlockListDto:
+      type: object
+      properties:
+        id:
+          type: number
+        ownerId:
+          type: number
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/BlockItemDto'
+      required:
+        - id
+        - ownerId
+        - items
+    AddBlockItemDto:
+      type: object
+      properties:
+        type:
+          type: string
+          enum:
+            - WEBSITE
+            - KEYWORD
+        data:
+          type: string
+      required:
+        - type
+        - data
+    SignInBodyDto:
+      type: object
+      properties:
+        email:
+          type: string
+          example: user@example.com
+        password:
+          type: string
+          example: password123
+      required:
+        - email
+        - password
+    SignUpBodyDto:
+      type: object
+      properties:
+        email:
+          type: string
+          example: user@example.com
+        password:
+          type: string
+          example: password123
+      required:
+        - email
+        - password
+    GetSessionInfoDto:
+      type: object
+      properties:
+        id:
+          type: number
+        email:
+          type: string
+        iat:
+          type: number
+        exp:
+          type: number
+      required:
+        - id
+        - email
+        - iat
+        - exp
