@@ -1,29 +1,28 @@
 'use client'
 
-import { authControllerGetSessionInfo } from '@/shared/api/generated'
-import { useQuery } from '@tanstack/react-query'
 import { UIHeader } from '@/shared/ui/ui-header'
+import { ProtectedLayout } from '@/shared/ui/layouts/protected-layout'
+import { useAuthSession } from '@/features/auth/model/use-auth-session'
+import { useSignOut } from '@/features/auth/model/use-sign-out'
 
 export default function HomePage() {
-  const { data } = useQuery({
-    queryKey: ['session'],
-    queryFn: authControllerGetSessionInfo,
-  })
-
-  console.log(data)
+  const { user } = useAuthSession()
+  const { signOut } = useSignOut()
 
   return (
-    <div className="flex flex-col gap-4 min-h-screen items-center  bg-zinc-50 font-sans dark:bg-black">
-      <UIHeader className="w-full" />
-      <main className="flex flex-1 flex-col justify-center items-center w-full px-4">
-        <h1 className="text-3xl font-bold text-center">
-          Welcome to the Website Blocker Project!
-        </h1>
-        <p className="mt-4 text-center text-gray-600">
-          This is the home page of your Next.js application.
-        </p>
-      </main>
-    </div>
+    <ProtectedLayout>
+      <div className="flex flex-col gap-4 min-h-screen items-center bg-zinc-50 font-sans dark:bg-black">
+        <UIHeader className="w-full" right={<div onClick={signOut}>Sign Out</div>} />
+        <main className="flex flex-1 flex-col justify-center items-center w-full px-4">
+          <h1 className="text-3xl font-bold text-center">
+            Welcome to the Website Blocker Project!
+          </h1>
+          <p className="mt-4 text-center text-gray-600">
+            {user ? `Hello, ${user.email || 'User'}!` : 'This is the home page of your Next.js application.'}
+          </p>
+        </main>
+      </div>
+    </ProtectedLayout>
   )
 }
 
