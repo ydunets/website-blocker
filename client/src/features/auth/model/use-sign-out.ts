@@ -13,7 +13,9 @@ export function useSignOut() {
     mutationFn: () => authControllerSignOut(),
     onSuccess() {
       // Clear the session cache
-      queryClient.removeQueries({ queryKey: ['session'] })
+      queryClient.setQueryData(['session'], null)
+      queryClient.cancelQueries({ queryKey: ['session'] })
+
       // Redirect to sign-in page
       router.push(ROUTES.SIGN_IN)
     },

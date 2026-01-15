@@ -1,12 +1,10 @@
 'use client'
 
-import { authControllerGetSessionInfo } from '@/shared/api/generated'
 import { ROUTES } from '@/shared/constants/routes'
-import { useQuery } from '@tanstack/react-query'
 import { useRouter } from 'next/navigation'
-import { useEffect } from 'react'
 import { UISpinner } from '../ui-spinner'
-import { useAuthSession } from '@/features/auth/model/use-auth-session'
+import { useAuthSession } from '@/entities/session/queries'
+import { PropsWithChildren } from 'react'
 
 type ProtectedLayoutProps = {
   children: React.ReactNode
@@ -14,15 +12,7 @@ type ProtectedLayoutProps = {
 
 export function ProtectedLayout({ children }: ProtectedLayoutProps) {
   const router = useRouter()
-
-  const { user, isLoading, isError } = useAuthSession()
-
-  useEffect(() => {
-    // If there's an error (like 401 Unauthorized), redirect to sign-in
-    if (isError) {
-      router.push(ROUTES.SIGN_IN)
-    }
-  }, [isError, router])
+  const { data , isLoading, isError } = useAuthSession()
 
   // Show loading spinner while checking authentication
   if (isLoading) {
@@ -33,11 +23,33 @@ export function ProtectedLayout({ children }: ProtectedLayoutProps) {
     )
   }
 
-  // If not authenticated, don't render children (redirect will happen)
-  if (!user || isError) {
-    return null
+  // If not authenticated, don't render children
+  if (!data || isError) {
+    router.replace(ROUTES.SIGN_IN)
   }
 
   // User is authenticated, render children
   return <>{children}</>
+}
+
+// HOC pattern for protecting page components
+export function withAuth<P>(Component: React.ComponentType<P>) {
+  return function ProtectedComponent(props: PropsWithChildren<P>) {
+    const router = useRouter()
+    const { isLoading, isError } = useAuthSession()
+
+    if (isLoading) {
+      return (
+        <div className="flex items-center justify-center min-h-screen">
+          <UISpinner className="w-8 h-8 text-teal-500" />
+        </div>
+      )
+    }
+
+    if (isError) {
+      router.replace(ROUTES.SIGN_IN);
+    }
+    
+    return <Component {...props} />
+  }
 }

@@ -1,30 +1,40 @@
 'use client'
 
 import { UIHeader } from '@/shared/ui/ui-header'
-import { ProtectedLayout } from '@/shared/ui/layouts/protected-layout'
-import { useAuthSession } from '@/features/auth/model/use-auth-session'
-import { useSignOut } from '@/features/auth/model/use-sign-out'
+import { withAuth } from '@/shared/ui/layouts/protected-layout'
+import { useAuthSession } from '@/entities/session/queries'
+import { ToggleBlockingButton } from '@/features/toggle-blocking/ui/toggle-blocking.button'
+import { Profile } from '@/widgets/profile'
+import { useBlockListQuery } from '@/entities/block-list/queries'
+import { BlockList } from '@/features/block-list/ui/block-list'
+import { AddBlockItemForm } from '@/features/block-list/ui/add-block-item-form'
 
-export default function HomePage() {
-  const { user } = useAuthSession()
-  const { signOut } = useSignOut()
-
+function HomePage() {
+  const { data } = useAuthSession()
+  const { data: blockListData } = useBlockListQuery({})
   return (
-    <ProtectedLayout>
-      <div className="flex flex-col gap-4 min-h-screen items-center bg-zinc-50 font-sans dark:bg-black">
-        <UIHeader className="w-full" right={<div onClick={signOut}>Sign Out</div>} />
-        <main className="flex flex-1 flex-col justify-center items-center w-full px-4">
-          <h1 className="text-3xl font-bold text-center">
-            Welcome to the Website Blocker Project!
-          </h1>
-          <p className="mt-4 text-center text-gray-600">
-            {user ? `Hello, ${user.email || 'User'}!` : 'This is the home page of your Next.js application.'}
-          </p>
+    <main className="min-h-screen flex flex-col">
+      <UIHeader
+        className="w-full"
+        right={
+          <Profile/>
+        }
+      />
+      <div className='grid grid-cols-[200px_1fr]'>
+        <aside className="px-5 pt-10">
+          <ToggleBlockingButton />
+        </aside>
+        <main className="pt-10 px-5">
+          <h1 className="text-2xl mb-8">Block list</h1>
+          <AddBlockItemForm />
+          <BlockList className="mt-3" />
         </main>
       </div>
-    </ProtectedLayout>
+    </main>
   )
 }
+
+export default withAuth(HomePage)
 
 {
   /* <UIHeader className="w-full" right={<div>Right Side</div>} />
